@@ -1,0 +1,63 @@
+[tool.tamtam]
+  stages = [
+    "quality",
+    "test"
+  ]
+  tasks = [
+    "run-isort",
+    "run-black"
+  ]
+
+  [tool.tamtam.test]
+    stage = "test"
+    script = "pytest --cov --cov-append runtests.py tests"
+    pythons = ["2.7.14", "3.4", "3.5", "3.6", "3.7-dev"]
+    missing_pythons = "install"
+
+    [tool.tamtam.test.dependencies]
+      Django = [">=1.8,<1.9", ">=1.9,<1.10", ">=1.10,<1.11", ">=1.11,<2"]
+      neopy = ["==0.1", "==0.2"]
+
+  [tool.tamtam.pylint]
+    stage = "quality"
+    script = "pylint src/{{ cookiecutter.package_import_name }}"
+    dependencies = ["pylint"]
+
+  [tool.tamtam.bandit]
+    stage = "quality"
+    script = "bandit -r src/{{ cookiecutter.package_import_name }}"
+    dependencies = ["bandit"]
+    allow_failure = true
+
+  [tool.tamtam.safety]
+    stage = "quality"
+    script = "safety check --full-report"
+    dependencies = ["safety"]
+
+  [tool.tamtam.isort]
+    stage = "quality"
+    script = "isort -y -rc src/{{ cookiecutter.package_import_name }} tests"
+    dependencies = ["isort"]
+
+  [tool.tamtam.run-isort]
+    script = "isort -y -rc src/{{ cookiecutter.package_import_name }} tests"
+    dependencies = ["isort"]
+
+  [tool.tamtam.run-black]
+    script = "black src"
+    dependencies = ["black"]
+
+  [tool.tamtam.sphinx-links]
+    stage = "quality"
+    dependencies = ["sphinx", "sphinx_rtd_theme"]
+    before_script = "sphinx-build -E -b html docs dist/docs"
+    script = "sphinx-build -b linkcheck -w /dev/null docs dist/docs"
+
+  [tool.tamtam.sphinx-spelling]
+    stage = "quality"
+    dependencies = ["sphinx", "sphinx_rtd_theme", "sphinxcontrib-spelling", "pyenchant"]
+    before_script = "sphinx-build -E -b html docs dist/docs"
+    script = "sphinx-build -b spelling -w /dev/null docs dist/docs"
+
+    [tool.tamtam.sphinx-spelling.environment]
+      SPELLCHECK = 1
